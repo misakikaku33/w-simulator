@@ -484,14 +484,15 @@ function eligibility(plan, history, isFirstTime){
   if (rec.length < need){
     return { ok:false, why:'出演' + need + '回分の記録がたまると判定できます' };
   }
-  const span = rec.length === 1 ? '初回' : '直近' + rec.length + '回';
+  const span = rec.length === 1 ? '前回' : '直近' + rec.length + '回';
+  const tomo = rec.length === 1 ? 'が' : 'とも';
   const highAll = rec.every(v => v >= 10);
   if (plan.id === 'p1' || plan.id === 'p2'){
     // プラン3・4の条件を満たさない場合の受け皿（判定に隙間を作らない）
-    return { ok: !highAll, why: highAll ? span + 'とも10人以上なので、プラン3・4へ' : span + 'のどちらかまたは両方が9人以下、かつどちらかが4人以上' };
+    return { ok: !highAll, why: highAll ? span + tomo + '10人以上なので、プラン3・4へ' : (rec.length === 1 ? '前回が9人以下、かつ4人以上' : span + 'のどちらかまたは両方が9人以下、かつどちらかが4人以上') };
   }
   if (plan.id === 'p3' || plan.id === 'p4'){
-    return { ok: highAll, why: highAll ? span + 'とも10人以上' : span + 'すべて10人以上が必要' };
+    return { ok: highAll, why: highAll ? span + tomo + '10人以上' : span + (rec.length === 1 ? 'が10人以上必要' : 'とも10人以上が必要') };
   }
   const th = { p5a:14, p5b:17, p5c:21 }[plan.id];
   const ok = rec.every(v => v >= th);
@@ -719,10 +720,11 @@ function histNote(){
   }
 
   const rec = h.slice(0, Math.min(2, h.length));
-  const span = rec.length === 1 ? '初回' : '直近2回';
+  const span = rec.length === 1 ? '前回' : '直近2回';
+  const tomo = rec.length === 1 ? 'が' : 'とも';
   const line = rec.every(v => v >= 10)
-    ? span + 'とも10人以上なので、<b>プラン3・4</b>が選べます。'
-    : span + 'のどちらかまたは両方が9人以下なので、<b>プラン1・2</b>から選びます。';
+    ? span + tomo + '10人以上なので、<b>プラン3・4</b>が選べます。'
+    : (rec.length === 1 ? '前回が9人以下なので、<b>プラン1・2</b>から選びます。' : span + 'のどちらかまたは両方が9人以下なので、<b>プラン1・2</b>から選びます。');
 
   // 定額プランのうち、実際に選べるものを列挙する
   const flatIds = [['p5a','5A'], ['p5b','5B'], ['p5c','5C']];
