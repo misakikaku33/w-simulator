@@ -370,10 +370,11 @@ footer{
 <script>
 /* ===================== 報酬ロジック ===================== */
 // お客さま1人あたり、ミサキカクに実際に入る金額（黒字ライン算出用）。
-// 会場2,800円・配信2,600円を2026年1〜9月の実績比（会場40.1%／配信59.9%）で平均し、
-// 関係者割引・ショップカードの値引きと、配信手数料6%を引いたもの。
-const NET_PER_GUEST = 2548;
-const BROMIDE_UNIT = 220;
+// 会場2,900円（関係者2,600円）・配信2,600円を2026年1〜9月の実績比（会場40.1%／配信59.9%、
+// 会場客のうち関係者割引は約2割）で平均し、会場のSquare手数料3.25%と配信手数料6%を引いたもの。
+// ※ショップカードの割引は含めていない。
+const NET_PER_GUEST = 2566;
+const BROMIDE_UNIT = 330;
 const TEAM_BONUS = 2200;
 const TEAM_THRESHOLD = 50;
 const BEST_BONUS = 1100;   // 自己ベスト更新（これまでの全出演の最高人数を超えたとき）。プラン1〜4のみ
@@ -386,27 +387,27 @@ const PLANS = [
     tiers:[{upTo:3, rate:0},{upTo:10, rate:660},{upTo:20, rate:880},{upTo:Infinity, rate:1100}],
     milestones:[],
     growth:false, memo:'参加費は3,300円です。3人目まではバックがなく、4人目から1人につき660円。<b>8人で参加費がゼロになり、10人集めるとプラスになります。</b>11人目からは880円、21人目からは1,100円と単価が上がります。' },
-  { id:'p1', label:'プラン1', fee:6600, target:10,
+  { id:'p1', label:'プラン1', fee:8250, target:10,
     tiers:[{upTo:Infinity, rate:550}], milestones:[{at:3,amt:550},{at:5,amt:550},{at:10,amt:2200}],
     growth:true, memo:'1人につき550円。10人で参加費がゼロになります。' },
-  { id:'p2', label:'プラン2', fee:9900, target:10,
+  { id:'p2', label:'プラン2', fee:11550, target:10,
     tiers:[{upTo:Infinity, rate:880}], milestones:[{at:5,amt:1760},{at:10,amt:3520}],
     growth:true, memo:'1人につき880円。8人まではプラン1と同じ結果。9人目からこちらが上回ります。10人で参加費がゼロになります。' },
-  { id:'p3', label:'プラン3', fee:6600, target:15,
-    tiers:[{upTo:Infinity, rate:1100}], milestones:[],
-    growth:true, memo:'1人につき1,100円。何人でも単価は変わりません。' },
-  { id:'p4', label:'プラン4', fee:9900, target:15,
-    tiers:[{upTo:10, rate:1100},{upTo:Infinity, rate:1760}], milestones:[],
-    growth:true, memo:'10人目までは1,100円、11人目からは1,760円。15人でプラン3と並び、16人目から上回ります。' },
+  { id:'p3', label:'プラン3', fee:8250, target:15,
+    tiers:[{upTo:Infinity, rate:1210}], milestones:[],
+    growth:true, memo:'1人につき1,210円。何人でも単価は変わりません。' },
+  { id:'p4', label:'プラン4', fee:11550, target:15,
+    tiers:[{upTo:10, rate:1210},{upTo:Infinity, rate:1870}], milestones:[],
+    growth:true, memo:'10人目までは1,210円、11人目からは1,870円。15人でプラン3と並び、16人目から上回ります。' },
   { id:'p5a', label:'プラン5A（定額）', fee:0, target:14,
     tiers:[], milestones:[], steps:[{at:0,amt:2200},{at:7,amt:4400},{at:14,amt:8800}],
     growth:false, memo:'参加費なし。金額は3段階です。14人以上で8,800円、7〜13人で4,400円、6人以下で2,200円。同じ段のなかでは何人集めても同額です。' },
   { id:'p5b', label:'プラン5B（定額）', fee:0, target:17,
-    tiers:[], milestones:[], steps:[{at:0,amt:4400},{at:9,amt:8800},{at:17,amt:17600}],
-    growth:false, memo:'参加費なし。金額は3段階です。17人以上で17,600円、9〜16人で8,800円、8人以下で4,400円。同じ段のなかでは何人集めても同額です。' },
+    tiers:[], milestones:[], steps:[{at:0,amt:4400},{at:9,amt:8800},{at:17,amt:15400}],
+    growth:false, memo:'参加費なし。金額は3段階です。17人以上で15,400円、9〜16人で8,800円、8人以下で4,400円。同じ段のなかでは何人集めても同額です。' },
   { id:'p5c', label:'プラン5C（定額）', fee:0, target:21,
-    tiers:[], milestones:[], steps:[{at:0,amt:6600},{at:11,amt:13200},{at:21,amt:26400}],
-    growth:false, memo:'参加費なし。金額は3段階です。21人以上で26,400円、11〜20人で13,200円、10人以下で6,600円。同じ段のなかでは何人集めても同額です。' },
+    tiers:[], milestones:[], steps:[{at:0,amt:6600},{at:11,amt:13200},{at:21,amt:23100}],
+    growth:false, memo:'参加費なし。金額は3段階です。21人以上で23,100円、11〜20人で13,200円、10人以下で6,600円。同じ段のなかでは何人集めても同額です。' },
   { id:'p6', label:'プラン6', fee:17600, target:0,
     tiers:[], milestones:[], growth:false,
     memo:'集客は問いません。参加費17,600円だけで出演できます。報酬はありません。' },
