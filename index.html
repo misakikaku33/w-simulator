@@ -9,16 +9,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --stage:#14121a;
-  --panel:#1e1b26;
-  --panel-2:#262230;
-  --rule:#332e40;
-  --ink:#efece6;
-  --dim:#948da3;
-  --gold:#e0b563;
-  --gold-soft:#8a6c33;
-  --red:#d06b6b;
-  --red-soft:#7a3f40;
+  --stage:#f5f0e4;
+  --panel:#fffdf7;
+  --panel-2:#efe8d8;
+  --rule:#d9cfba;
+  --ink:#27231f;
+  --dim:#6a6054;
+  --gold:#27497d;
+  --gold-soft:#a9bbd6;
+  --red:#b83a2b;
+  --red-soft:#e3b1a8;
+  --gold-rgb:39,73,125;
+  --red-rgb:184,58,43;
+  color-scheme:light;
   --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
   --sans:"Noto Sans JP",system-ui,-apple-system,sans-serif;
 }
@@ -50,6 +53,11 @@ h1{
   font-size:26px;line-height:1.35;letter-spacing:.02em;
 }
 .lede{color:var(--dim);font-size:13px;margin-top:10px;line-height:1.7}
+.goal{font-size:13px;margin-top:10px;line-height:1.7}
+.goal b{color:var(--gold);font-weight:700}
+.guide{font-size:13px;color:var(--dim);margin:-2px 0 12px;line-height:1.7}
+.guide b{color:var(--ink);font-weight:700}
+.locked .n{white-space:nowrap}
 
 /* ---- section ---- */
 section{margin-bottom:24px}
@@ -189,10 +197,10 @@ input[type=range]:focus-visible{outline:2px solid var(--gold);outline-offset:4px
 /* ---- headline result ---- */
 .headline{
   border:1px solid var(--gold-soft);border-radius:14px;
-  background:linear-gradient(180deg,rgba(224,181,99,.09),rgba(224,181,99,.02));
+  background:linear-gradient(180deg,rgba(var(--gold-rgb),.09),rgba(var(--gold-rgb),.02));
   padding:18px 16px;text-align:center;margin-bottom:18px;
 }
-.headline.negative{border-color:var(--red-soft);background:linear-gradient(180deg,rgba(208,107,107,.09),rgba(208,107,107,.02))}
+.headline.negative{border-color:var(--red-soft);background:linear-gradient(180deg,rgba(var(--red-rgb),.09),rgba(var(--red-rgb),.02))}
 .headline .cap{font-size:11px;letter-spacing:.14em;color:var(--dim)}
 .headline .plan{font-family:var(--serif);font-size:15px;font-weight:700;margin-top:6px}
 .headline .amt{
@@ -200,7 +208,7 @@ input[type=range]:focus-visible{outline:2px solid var(--gold);outline-offset:4px
   font-variant-numeric:tabular-nums;color:var(--gold);
 }
 .headline.negative .amt{color:var(--red)}
-.headline .next{font-size:13px;color:var(--dim);margin-top:8px}
+.headline .next{font-size:13px;color:var(--dim);margin-top:8px;line-height:1.8}
 .headline .next b{color:var(--ink);font-weight:700}
 
 /* ---- plan list ---- */
@@ -288,6 +296,7 @@ footer{
   <div class="eyebrow">ミサキカク毎週公演</div>
   <h1>報酬シミュレーター</h1>
   <p class="lede">何人お客さまを呼んだら、いくら受け取れるか。<br>スライダーを動かして確かめてください。</p>
+  <p class="goal">ミサキカクの基本集客目標は<b>10人</b>です。</p>
 </header>
 
 <section>
@@ -297,14 +306,13 @@ footer{
       <input type="checkbox" id="firstTime">
       <span>今回が初めての出演です</span>
     </label>
-    <p class="hist-lead">新しい順に、出演した回数だけ左から入れてください。</p>
+    <p class="hist-lead">直近2回の人数を、新しい順に入れてください。入れなくても、基本プラン・挑戦プランは試算できます。</p>
     <div class="hist" id="histBox">
-      <div class="hist-item"><label>前回</label><input type="number" id="h1" min="0" max="60" value="9" inputmode="numeric" placeholder="—"></div>
-      <div class="hist-item"><label>2回前</label><input type="number" id="h2" min="0" max="60" value="" inputmode="numeric" placeholder="—"></div>
-      <div class="hist-item"><label>3回前</label><input type="number" id="h3" min="0" max="60" value="" inputmode="numeric" placeholder="—"></div>
+      <div class="hist-item"><label for="h1">前回</label><input type="number" id="h1" min="0" max="60" value="" inputmode="numeric" placeholder="—"></div>
+      <div class="hist-item"><label for="h2">2回前</label><input type="number" id="h2" min="0" max="60" value="" inputmode="numeric" placeholder="—"></div>
     </div>
     <div class="best-row" id="bestBox">
-      <label for="best">これまでの最高人数<span>（出演4回目以降の方は、任意でご記入ください）</span></label>
+      <label for="best">これまでの最高人数<span>（任意。入れると「自己ベスト更新」を計算します）</span></label>
       <input type="number" id="best" min="0" max="99" value="" inputmode="numeric" placeholder="—">
     </div>
     <p class="hist-note" id="histNote"></p>
@@ -355,6 +363,7 @@ footer{
   <div id="notice"></div>
   <div id="headline"></div>
   <div class="sec-title">選べるプラン</div>
+  <div id="guide"></div>
   <div id="plans"></div>
   <div id="lockedWrap" style="margin-top:18px"></div>
 </section>
@@ -369,6 +378,7 @@ footer{
 
 <script>
 /* ===================== 報酬ロジック ===================== */
+// 2027年プラン（2026-11-12確定・境界なし版）。
 // お客さま1人あたり、ミサキカクに実際に入る金額（黒字ライン算出用）。
 // 会場2,900円（関係者2,600円）・配信2,600円を2026年1〜9月の実績比（会場40.1%／配信59.9%、
 // 会場客のうち関係者割引は約2割）で平均し、会場のSquare手数料3.25%と配信手数料6%を引いたもの。
@@ -377,43 +387,31 @@ const NET_PER_GUEST = 2566;
 const BROMIDE_UNIT = 330;
 const TEAM_BONUS = 2200;
 const TEAM_THRESHOLD = 50;
-const BEST_BONUS = 1100;   // 自己ベスト更新（これまでの全出演の最高人数を超えたとき）。プラン1〜4のみ
+const BEST_BONUS = 1100;   // 自己ベスト更新（これまでの全出演の最高人数を超えたとき）。基本プラン・挑戦プランのみ
 // 出演者1人ぶんの枠でまかなう費用（2027年）。合計93,500円を4人で割ったもの。
 // 会場31,000＋稽古場10,000＋人件費40,000＋当日スタッフ3,000＋台本印刷3,000＋打ち上げ平均4,500＋赤字補填2,000
 const COST_PER_SLOT = 93500 / 4;
+const FLAT_THRESHOLD = 15;   // 定額プラン：出演3回目から、直近2回ともこの人数以上
+const FORCE_THRESHOLD = 3;   // 直近2回ともこの人数以下なら、集客不問プランのみ
 
+// 特別枠（ミサキカクが指定した人だけ）は、このツールには載せない。
 const PLANS = [
-  { id:'first', label:'初回プラン', fee:3300, target:10,
+  { id:'first', label:'初回プラン', fee:3300, sub:'参加費 3,300円',
     tiers:[{upTo:3, rate:0},{upTo:10, rate:660},{upTo:20, rate:880},{upTo:Infinity, rate:1100}],
     milestones:[],
-    growth:false, memo:'参加費は3,300円です。3人目まではバックがなく、4人目から1人につき660円。<b>8人で参加費がゼロになり、10人集めるとプラスになります。</b>11人目からは880円、21人目からは1,100円と単価が上がります。' },
-  { id:'p1', label:'プラン1', fee:8250, target:10,
+    growth:false, memo:'参加費は3,300円です。3人目まではバックがなく、4人目から1人につき660円。<b>8人で参加費がゼロになり、9人からプラスになります。</b>11人目からは880円、21人目からは1,100円と単価が上がります。' },
+  { id:'kihon', label:'基本プラン', fee:7700, sub:'参加費 7,700円',
     tiers:[{upTo:Infinity, rate:550}], milestones:[{at:3,amt:550},{at:5,amt:550},{at:10,amt:2200}],
-    growth:true, memo:'1人につき550円。10人で参加費がゼロになります。' },
-  { id:'p2', label:'プラン2', fee:11550, target:10,
-    tiers:[{upTo:Infinity, rate:880}], milestones:[{at:5,amt:1760},{at:10,amt:3520}],
-    growth:true, memo:'1人につき880円。8人まではプラン1と同じ結果。9人目からこちらが上回ります。10人で参加費がゼロになります。' },
-  { id:'p3', label:'プラン3', fee:8250, target:15,
-    tiers:[{upTo:Infinity, rate:1210}], milestones:[],
-    growth:true, memo:'1人につき1,210円。何人でも単価は変わりません。' },
-  { id:'p4', label:'プラン4', fee:11550, target:15,
-    tiers:[{upTo:10, rate:1210},{upTo:Infinity, rate:1870}], milestones:[],
-    growth:true, memo:'10人目までは1,210円、11人目からは1,870円。15人でプラン3と並び、16人目から上回ります。' },
-  { id:'p5a', label:'プラン5A（定額）', fee:0, target:14,
-    tiers:[], milestones:[], steps:[{at:0,amt:2200},{at:7,amt:4400},{at:14,amt:8800}],
-    growth:false, memo:'参加費なし。金額は3段階です。14人以上で8,800円、7〜13人で4,400円、6人以下で2,200円。同じ段のなかでは何人集めても同額です。' },
-  { id:'p5b', label:'プラン5B（定額）', fee:0, target:17,
-    tiers:[], milestones:[], steps:[{at:0,amt:4400},{at:9,amt:8800},{at:17,amt:15400}],
-    growth:false, memo:'参加費なし。金額は3段階です。17人以上で15,400円、9〜16人で8,800円、8人以下で4,400円。同じ段のなかでは何人集めても同額です。' },
-  { id:'p5c', label:'プラン5C（定額）', fee:0, target:21,
-    tiers:[], milestones:[], steps:[{at:0,amt:6600},{at:11,amt:13200},{at:21,amt:23100}],
-    growth:false, memo:'参加費なし。金額は3段階です。21人以上で23,100円、11〜20人で13,200円、10人以下で6,600円。同じ段のなかでは何人集めても同額です。' },
-  { id:'p6', label:'プラン6', fee:17600, target:0,
+    growth:true, memo:'参加費は7,700円です。1人につき550円。3人・5人・10人を達成するとボーナスがつきます（+550円／+550円／+2,200円）。<b>10人でプラスになります。</b>' },
+  { id:'chosen', label:'挑戦プラン', fee:13200, sub:'参加費 13,200円',
+    tiers:[{upTo:15, rate:1210},{upTo:Infinity, rate:1870}], milestones:[{at:10,amt:4950}],
+    growth:true, memo:'参加費は13,200円です。15人目までは1人につき1,210円、16人目からは1,870円。10人を達成すると+4,950円のボーナスがつきます。<b>10人に届くとプラスになり、基本プランより多く受け取れます。</b>届かないと、基本プランより自己負担が大きくなります。' },
+  { id:'teigaku', label:'定額プラン', fee:0, sub:'参加費なし',
+    tiers:[], milestones:[], steps:[{at:0,amt:2200},{at:10,amt:7700},{at:15,amt:11000},{at:20,amt:18700}],
+    growth:false, memo:'参加費はありません。金額は4段階です。20人以上で18,700円、15〜19人で11,000円、10〜14人で7,700円、9人以下で2,200円。同じ段のなかでは何人集めても同額です。出演3回目から、直近2回とも15人以上の方が選べます。' },
+  { id:'fumon', label:'集客不問プラン', fee:16500, sub:'参加費 16,500円',
     tiers:[], milestones:[], growth:false,
-    memo:'集客は問いません。参加費17,600円だけで出演できます。報酬はありません。' },
-  { id:'p7', label:'プラン7', fee:0, target:5,
-    tiers:[{upTo:Infinity, rate:880}], milestones:[{at:5,amt:4400}],
-    growth:false, memo:'ミサキカクが指定したときだけ使います。出演者からは選べません。' },
+    memo:'集客は問いません。参加費16,500円で出演できます。基本報酬はありません。' },
 ];
 
 function tierSum(tiers, n){
@@ -428,17 +426,26 @@ function tierSum(tiers, n){
   return sum;
 }
 
+// 定額プランの段の呼び名（例：9人以下／10〜14人／20人以上）
+function stepLabel(steps, n){
+  let i = 0;
+  for (let k = 0; k < steps.length; k++){ if (n >= steps[k].at) i = k; }
+  const lo = steps[i].at;
+  const hi = i < steps.length - 1 ? steps[i + 1].at - 1 : null;
+  if (hi === null) return lo + '人以上';
+  if (lo === 0) return hi + '人以下';
+  return lo + '〜' + hi + '人';
+}
+
 function calc(plan, o){
   const n = o.count ?? 0, bromide = o.bromide ?? 0, teamTotal = o.teamTotal ?? 0;
   const lines = [];
 
-  // 定額プラン：帯ごとに定額（同じ段のなかでは人数が変わっても同額）
+  // 定額プラン：段ごとに定額（同じ段のなかでは人数が変わっても同額）
   if (plan.steps){
-    let amt = 0, lo = 0;
-    for (const st of plan.steps){ if (n >= st.at){ amt = st.amt; lo = st.at; } }
-    const top = plan.steps[plan.steps.length - 1];
-    const label = (lo === top.at) ? (top.at + '人以上（定額）') : (lo + '人以上の段（定額）');
-    lines.push({ label: label, amount: amt });
+    let amt = 0;
+    for (const st of plan.steps){ if (n >= st.at) amt = st.amt; }
+    lines.push({ label: stepLabel(plan.steps, n) + '（定額）', amount: amt });
     const br0 = bromide * BROMIDE_UNIT;
     if (br0 > 0) lines.push({ label:'ブロマイド ' + bromide + '枚', amount: br0 });
     let team0 = 0;
@@ -466,38 +473,28 @@ function calc(plan, o){
   return { gross, fee: plan.fee, net: gross - plan.fee, lines };
 }
 
-function eligibility(plan, history, isFirstTime){
-  // 直近2回とも3人以下なら、プラン6のみ選べる（主催の損失を一定に抑えるための下限ルール）
-  if (!isFirstTime && history.length >= 2 && history[0] <= 3 && history[1] <= 3){
-    if (plan.id === 'p6') return { ok:true, why:'直近2回とも3人以下のため選べます' };
-    return { ok:false, why:'直近2回とも3人以下のため、今回はプラン6のみ選べます' };
-  }
-  if (plan.id === 'first') return { ok: isFirstTime, why:'初参加の方のみ' };
-  if (plan.id === 'p7')    return { ok: false, why:'ミサキカクが指定したときだけ' };
-  if (plan.id === 'p6')    return { ok: !isFirstTime, why:'2回目以降ならどなたでも' };
-  if (isFirstTime)         return { ok: false, why:'2回目から選べます' };
-  if (!history.length)     return { ok: false, why:'前回の人数を入れてください' };
+// 直近2回とも3人以下なら、集客不問プランのみ選べる（主催の損失を一定に抑えるための下限ルール）
+function isForced(history, isFirstTime){
+  return !isFirstTime && history.length >= 2 &&
+    history[0] <= FORCE_THRESHOLD && history[1] <= FORCE_THRESHOLD;
+}
 
-  const isFlat = plan.id === 'p5a' || plan.id === 'p5b' || plan.id === 'p5c';
-  // プラン1〜4は実績1回でも判定できる（出演2回目の方のため）。プラン5A〜5C（定額）は2回分必要（出演3回目から）。
-  const need = isFlat ? 2 : Math.min(2, history.length);
-  const rec = history.slice(0, need);
-  if (rec.length < need){
-    return { ok:false, why:'出演' + need + '回分の記録がたまると判定できます' };
+// history は新しい順（[前回, 2回前]）。入力がなければ空の配列。
+function eligibility(plan, history, isFirstTime){
+  if (isForced(history, isFirstTime)){
+    if (plan.id === 'fumon') return { ok:true, why:'直近2回とも3人以下のため選べます' };
+    return { ok:false, why:'直近2回とも3人以下のため、今回は集客不問プランのみ選べます' };
   }
-  const span = rec.length === 1 ? '前回' : '直近' + rec.length + '回';
-  const tomo = rec.length === 1 ? 'が' : 'とも';
-  const highAll = rec.every(v => v >= 10);
-  if (plan.id === 'p1' || plan.id === 'p2'){
-    // プラン3・4の条件を満たさない場合の受け皿（判定に隙間を作らない）
-    return { ok: !highAll, why: highAll ? span + tomo + '10人以上なので、プラン3・4へ' : (rec.length === 1 ? '前回が9人以下、かつ4人以上' : span + 'のどちらかまたは両方が9人以下、かつどちらかが4人以上') };
+  if (plan.id === 'first') return { ok: isFirstTime, why:'初めての出演の方のみ' };
+  if (plan.id === 'teigaku'){
+    if (isFirstTime) return { ok:false, why:'出演3回目から、直近2回とも' + FLAT_THRESHOLD + '人以上の方' };
+    if (history.length < 2) return { ok:false, unknown:true, why:'直近2回の人数を入れると判定できます' };
+    const ok = history[0] >= FLAT_THRESHOLD && history[1] >= FLAT_THRESHOLD;
+    return { ok, why: ok ? '直近2回とも' + FLAT_THRESHOLD + '人以上' : '直近2回とも' + FLAT_THRESHOLD + '人以上が必要' };
   }
-  if (plan.id === 'p3' || plan.id === 'p4'){
-    return { ok: highAll, why: highAll ? span + tomo + '10人以上' : span + (rec.length === 1 ? 'が10人以上必要' : 'とも10人以上が必要') };
-  }
-  const th = { p5a:14, p5b:17, p5c:21 }[plan.id];
-  const ok = rec.every(v => v >= th);
-  return { ok, why: ok ? '直近2回とも' + th + '人以上' : '直近2回とも' + th + '人以上が必要' };
+  // 基本・挑戦・集客不問：2回目以降ならどなたでも
+  if (isFirstTime) return { ok:false, why:'2回目から選べます' };
+  return { ok:true, why:'2回目以降ならどなたでも' };
 }
 
 // ミサキカクも黒字になる人数（主宰の人件費まで含めてまかなえるライン）。
@@ -531,36 +528,46 @@ function flatPlanETA(history, th){
   return 2;
 }
 
+// 選べるプランを手取りの多い順に並べ、いちばん多いプランと2番目との差を返す（「どちらが得か」の表示用）
+function ranking(history, isFirstTime, opts){
+  const open = PLANS
+    .filter(p => eligibility(p, history, isFirstTime).ok)
+    .map(p => ({ id:p.id, label:p.label, net: calc(p, opts).net }))
+    .sort((a, b) => b.net - a.net);
+  const top = open[0] || null, second = open[1] || null;
+  return { open, top, second, diff: (top && second) ? top.net - second.net : null };
+}
+
 /* ===================== 画面 ===================== */
 const $ = id => document.getElementById(id);
 const yen = v => (v < 0 ? '−' : '') + Math.abs(v).toLocaleString('ja-JP') + '円';
 
-const BAR_MIN = -20000, BAR_MAX = 55000;
+const BAR_MIN = -20000, BAR_MAX = 60000;
 const zeroPct = (0 - BAR_MIN) / (BAR_MAX - BAR_MIN) * 100;
 const openSet = new Set();
+const HIST_IDS = ['h1','h2'];
 
 function readState(){
   const isFirst = $('firstTime').checked;
-  const h = ['h1','h2','h3'].map(id => {
+  const h = HIST_IDS.map(id => {
     const v = $(id).value.trim();
     return v === '' ? null : Math.max(0, Math.min(60, parseInt(v, 10) || 0));
   });
   // 新しい順に、途中で空欄が出たらそこまでを出演履歴とみなす
   const history = [];
   if (!isFirst){ for (const v of h){ if (v === null) break; history.push(v); } }
-  const prev = history.length ? history[0] : null;
   // 自己ベスト：入力欄の人数と、入力済みの出演履歴のうち、いちばん多い人数
   const bv = $('best').value.trim();
   const bestInput = (isFirst || bv === '') ? null : Math.max(0, Math.min(99, parseInt(bv, 10) || 0));
   const cands = history.slice();
-  if (bestInput !== null && history.length) cands.push(bestInput);
+  if (bestInput !== null) cands.push(bestInput);
   const best = cands.length ? Math.max.apply(null, cands) : null;
   return {
     isFirst, history,
     count: +$('count').value,
     bromide: +$('brOut').textContent,
     teamTotal: $('team').checked ? TEAM_THRESHOLD : 0,
-    prev, best
+    best
   };
 }
 
@@ -570,7 +577,7 @@ function render(){
   $('histBox').classList.toggle('disabled', s.isFirst);
   $('bestBox').classList.toggle('disabled', s.isFirst);
 
-  const opts = { count:s.count, bromide:s.bromide, teamTotal:s.teamTotal, prev:s.prev, best:s.best };
+  const opts = { count:s.count, bromide:s.bromide, teamTotal:s.teamTotal, best:s.best };
   const optsNext = Object.assign({}, opts, { count:s.count + 1 });
 
   const rows = PLANS.map(p => {
@@ -583,19 +590,18 @@ function render(){
   const open = rows.filter(r => r.el.ok).sort((a,b) => b.net - a.net);
   const shut = rows.filter(r => !r.el.ok);
 
-  // --- プラン6のご案内
+  // --- 集客不問プランのご案内
   const nt = $('notice');
-  const forced = !s.isFirst && s.history.length >= 2 && s.history[0] <= 3 && s.history[1] <= 3;
-  if (forced){
+  if (isForced(s.history, s.isFirst)){
     nt.innerHTML =
-      '<div class="notice"><div class="nt">今回はプラン6のみ選べます</div>' +
+      '<div class="notice"><div class="nt">今回は集客不問プランのみ選べます</div>' +
       '<p>直近2回とも3人以下でした。集客に向き合うのがしんどいときのための仕組みとして、' +
-      '<b>参加費17,600円・集客は問わない</b>プラン6をご用意しています。<br>' +
-      '次回、集客が4人以上に戻れば、またプラン1・2から選べます。</p></div>';
-  } else if (!s.isFirst && s.history.length >= 1 && s.history[0] <= 3){
+      '<b>参加費16,500円・集客は問わない</b>集客不問プランをご用意しています。<br>' +
+      '次回、集客が4人以上に戻れば、また基本プラン・挑戦プランから選べます。</p></div>';
+  } else if (!s.isFirst && s.history.length >= 1 && s.history[0] <= FORCE_THRESHOLD){
     nt.innerHTML =
-      '<div class="notice"><div class="nt">次回も3人以下だと、プラン6のみになります</div>' +
-      '<p>前回は' + s.history[0] + '人でした。もう1回3人以下が続くと、次回選べるプランがプラン6だけになります。</p></div>';
+      '<div class="notice"><div class="nt">次回も3人以下だと、集客不問プランのみになります</div>' +
+      '<p>前回は' + s.history[0] + '人でした。もう1回3人以下が続くと、次回選べるプランが集客不問プランだけになります。</p></div>';
   } else {
     nt.innerHTML = '';
   }
@@ -608,7 +614,6 @@ function render(){
     hl.className = 'headline' + (neg ? ' negative' : '');
     const toZero = neg ? nextZero(top.p, opts, s.count) : null;
     const obe = organizerBreakEven(top.p);
-    const flatReached = top.p.steps && s.count >= top.p.steps[top.p.steps.length - 1].at;
     let stepLine = '';
     if (top.p.steps){
       const nx = top.p.steps.find(st => st.at > s.count);
@@ -616,15 +621,24 @@ function render(){
         ? 'あと <b>' + (nx.at - s.count) + '人</b> で <b>' + yen(nx.amt) + '</b> に上がります'
         : 'いちばん上の段です。<b>ここから先は同額</b>です';
     }
+    // どちらが得か：2番目のプランとの差
+    let cmpLine = '';
+    if (open.length >= 2){
+      const second = open[1], diff = top.net - second.net;
+      if (diff === 0) cmpLine = '<b>' + second.p.label + '</b>と同額です';
+      else if (neg) cmpLine = '<b>' + second.p.label + '</b>より、自己負担が <b>' + yen(diff) + '</b> 少なくなります';
+      else cmpLine = '<b>' + second.p.label + '</b>より <b>' + yen(diff) + '</b> 多くなります';
+    }
     const obeLine = obe === null ? '' :
       (s.count >= obe ? 'この人数だと、<b>ミサキカクも黒字</b>です' : 'あと <b>' + (obe - s.count) + '人</b> で、ミサキカクも黒字になります');
     hl.innerHTML =
-      '<div class="cap">いま いちばん高いプラン</div>' +
+      '<div class="cap">' + (open.length >= 2 ? 'この人数で いちばんお得なプラン' : '今回 選べるプラン') + '</div>' +
       '<div class="plan">' + top.p.label + '</div>' +
       '<div class="amt">' + yen(top.net) + '</div>' +
       '<div class="next">' +
+      (cmpLine ? cmpLine + '<br>' : '') +
       (top.p.steps ? stepLine
-        : (top.p.id === 'p6' ? '集客に関わらず<b>同額</b>です'
+        : (top.p.id === 'fumon' ? '集客に関わらず<b>同額</b>です'
           : (top.delta > 0 ? 'あと1人で <b>' + yen(top.delta) + '</b> 増えます'
             : (function(){ const k = nextRise(top.p, opts, s.count); return k ? 'あと <b>' + k + '人</b> で報酬が増えはじめます' : ''; })()))) +
       (toZero ? '<br>あと <b>' + toZero + '人</b> でマイナスがなくなります' : '') +
@@ -632,11 +646,17 @@ function render(){
       '</div>';
   } else {
     hl.className = 'headline';
-    hl.innerHTML = '<div class="cap">選べるプランがありません</div><div class="next" style="margin-top:8px">出演履歴を入力してください</div>';
+    hl.innerHTML = '<div class="cap">選べるプランがありません</div>';
   }
 
+  // --- 選び方のひとこと（基本と挑戦の両方が選べるとき）
+  const both = open.some(r => r.p.id === 'kihon') && open.some(r => r.p.id === 'chosen');
+  $('guide').innerHTML = both
+    ? '<p class="guide">選び方：<b>10人に届くなら挑戦プラン、届かないなら基本プラン。</b></p>'
+    : '';
+
   // --- プラン一覧
-  $('plans').innerHTML = open.map((r, i) => planCard(r, i === 0, s.count, opts)).join('') ||
+  $('plans').innerHTML = open.map((r, i) => planCard(r, i === 0 && open.length >= 2, s.count, opts)).join('') ||
     '<p style="color:var(--dim);font-size:13px">条件に合うプランがありません。</p>';
 
   // --- 選べないプラン
@@ -667,7 +687,6 @@ function planCard(r, isTop, count, opts){
   const end = pct(r.net);
   const left = Math.min(end, zeroPct), width = Math.max(0.6, Math.abs(end - zeroPct));
   const isOpen = openSet.has(r.p.id);
-  const tgt = r.p.target > 0 ? '目標 ' + r.p.target + '人' : '目標なし';
 
   const obe = organizerBreakEven(r.p);
   const obeLine = obe === null ? '' :
@@ -683,7 +702,7 @@ function planCard(r, isTop, count, opts){
   if (r.p.steps){
     const nx = r.p.steps.find(st => st.at > count);
     nextTxt = nx ? 'あと' + (nx.at - count) + '人で ' + yen(nx.amt) : '最上段・以降同額';
-  } else if (r.p.id === 'p6'){
+  } else if (r.p.id === 'fumon'){
     nextTxt = '集客に関わらず同額';
   } else if (r.delta > 0){
     nextTxt = 'あと1人 +' + yen(r.delta);
@@ -694,12 +713,12 @@ function planCard(r, isTop, count, opts){
 
   return '<div class="plan' + (isTop ? ' top' : '') + (isOpen ? ' open' : '') + '">' +
     '<div class="plan-head" data-id="' + r.p.id + '">' +
-      '<span class="plan-name">' + r.p.label + (isTop ? '<span class="plan-tag">いちばん高い</span>' : '') + '</span>' +
+      '<span class="plan-name">' + r.p.label + (isTop ? '<span class="plan-tag">いちばんお得</span>' : '') + '</span>' +
       '<span class="plan-amt' + (neg ? ' neg' : '') + '">' + yen(r.net) + '</span>' +
     '</div>' +
     '<div class="bar-track"><div class="bar-zero" style="left:' + zeroPct + '%"></div>' +
       '<div class="bar-fill ' + (neg ? 'neg' : 'pos') + '" style="left:' + left + '%;width:' + width + '%"></div></div>' +
-    '<div class="plan-sub"><span>' + tgt + '</span>' +
+    '<div class="plan-sub"><span>' + r.p.sub + '</span>' +
       '<span class="plan-next' + (neg ? ' neg' : '') + '">' + nextTxt + '</span></div>' +
     '<div class="detail">' + detail + '</div>' +
   '</div>';
@@ -709,38 +728,29 @@ function planCard(r, isTop, count, opts){
 function histNote(){
   const s = readState();
   const t = $('histNote');
-  if (s.isFirst){ t.innerHTML = '初参加の方は<b>初回プラン</b>になります。参加費は3,300円で、<b>8人でゼロ、10人集めるとプラス</b>になります。今日の人数で、2回目に選べるプランが決まります。'; return; }
-  const h = s.history;
-  if (!h.length){ t.textContent = '前回の人数を入れてください。'; return; }
-  const nth = h.length >= 3 ? '4回目以降' : (h.length + 1) + '回目';
-
-  // プラン6強制の対象なら、この一言だけにして矛盾を出さない
-  if (h.length >= 2 && h[0] <= 3 && h[1] <= 3){
-    t.innerHTML = '今回は<b>' + nth + '</b>の出演です。直近2回とも3人以下のため、<b>プラン6</b>のみ選べます。';
+  if (s.isFirst){
+    t.innerHTML = '初めての方は<b>初回プラン</b>になります。参加費は3,300円で、<b>8人でゼロ、9人からプラス</b>になります。2回目からは、基本プラン・挑戦プランなどから選べます。';
     return;
   }
-
-  const rec = h.slice(0, Math.min(2, h.length));
-  const span = rec.length === 1 ? '前回' : '直近2回';
-  const tomo = rec.length === 1 ? 'が' : 'とも';
-  const line = rec.every(v => v >= 10)
-    ? span + tomo + '10人以上なので、<b>プラン3・4</b>が選べます。'
-    : (rec.length === 1 ? '前回が9人以下なので、<b>プラン1・2</b>から選びます。' : span + 'のどちらかまたは両方が9人以下なので、<b>プラン1・2</b>から選びます。');
-
-  // 定額プランのうち、実際に選べるものを列挙する
-  const flatIds = [['p5a','5A'], ['p5b','5B'], ['p5c','5C']];
-  const openable = flatIds.filter(([id]) => eligibility(PLANS.find(p => p.id === id), h, false).ok);
-  let gyara;
-  if (openable.length){
-    gyara = '<br>' + openable.map(x => 'プラン' + x[1] + '（定額）').join('・') + 'も選べます。';
-  } else {
-    const eta = flatPlanETA(h, 14);
-    gyara = eta === 0 ? ''
-      : '<br>プラン5A〜5C（定額）は、毎回14人以上を続ければ最短で<b>あと' + eta + '回</b>の出演から選べます。';
-  }
+  const h = s.history;
   const bestLine = s.best === null ? ''
-    : '<br>自己ベストは<b>' + s.best + '人</b>として計算します。これを超えると、プラン1〜4では+1,100円です。';
-  t.innerHTML = '今回は<b>' + nth + '</b>の出演です。' + line + gyara + bestLine;
+    : '自己ベストは<b>' + s.best + '人</b>として計算します。これを超えると、基本プラン・挑戦プランでは+1,100円です。';
+
+  let line;
+  if (isForced(h, false)){
+    line = '直近2回とも3人以下のため、今回は<b>集客不問プラン</b>のみ選べます。';
+  } else if (h.length === 0){
+    line = '直近2回の人数を入れると、<b>定額プラン</b>を選べるかどうかが分かります。';
+  } else if (h.length === 1){
+    line = '2回前の人数も入れると、<b>定額プラン</b>を選べるかどうかが分かります。出演2回目の方は、定額プランはまだ選べません（出演3回目からです）。';
+  } else if (h[0] >= FLAT_THRESHOLD && h[1] >= FLAT_THRESHOLD){
+    line = '直近2回とも' + FLAT_THRESHOLD + '人以上なので、<b>定額プラン</b>も選べます。';
+  } else {
+    const eta = flatPlanETA(h, FLAT_THRESHOLD);
+    line = '<b>定額プラン</b>は、直近2回とも' + FLAT_THRESHOLD + '人以上のときに選べます。毎回' + FLAT_THRESHOLD + '人以上を続ければ、最短で<b>あと' + eta + '回</b>の出演から選べます。';
+  }
+  // 集客不問プランのみのときは、自己ベスト更新（基本・挑戦のみ）の説明は出さない
+  t.innerHTML = line + (bestLine && !isForced(h, false) ? '<br>' + bestLine : '');
 }
 
 /* --- 操作 --- */
@@ -755,12 +765,16 @@ $('brMinus').addEventListener('click', () => { const o=$('brOut'); o.textContent
 $('brPlus').addEventListener('click',  () => { const o=$('brOut'); o.textContent = Math.min(50, +o.textContent + 1); render(); });
 $('team').addEventListener('change', render);
 $('firstTime').addEventListener('change', () => { histNote(); render(); });
-['h1','h2','h3'].forEach(id => $(id).addEventListener('input', () => { histNote(); render(); }));
-['h1','h2','h3'].forEach(id => $(id).addEventListener('blur', e => { clamp(e.target, 0, 60); histNote(); render(); }));
+HIST_IDS.forEach(id => $(id).addEventListener('input', () => { histNote(); render(); }));
+// 入力欄から離れたとき、数字を直した場合だけ描き直す（毎回描き直すと、直後のタップが空振りするため）
+function onBlurClamp(min, max){
+  return e => { const before = e.target.value; clamp(e.target, min, max); if (e.target.value !== before){ histNote(); render(); } };
+}
+HIST_IDS.forEach(id => $(id).addEventListener('blur', onBlurClamp(0, 60)));
 $('best').addEventListener('input', () => { histNote(); render(); });
-$('best').addEventListener('blur', e => { clamp(e.target, 0, 99); histNote(); render(); });
+$('best').addEventListener('blur', onBlurClamp(0, 99));
 $('histReset').addEventListener('click', () => {
-  ['h1','h2','h3'].forEach(id => $(id).value = '');
+  HIST_IDS.forEach(id => $(id).value = '');
   $('best').value = '';
   $('firstTime').checked = false;
   histNote(); render();
