@@ -492,7 +492,9 @@ function eligibility(plan, history, isFirstTime){
     const ok = history[0] >= FLAT_THRESHOLD && history[1] >= FLAT_THRESHOLD;
     return { ok, why: ok ? '直近2回とも' + FLAT_THRESHOLD + '人以上' : '直近2回とも' + FLAT_THRESHOLD + '人以上が必要' };
   }
-  // 基本・挑戦・集客不問：2回目以降ならどなたでも
+  // 集客不問：初めての方から、どなたでも
+  if (plan.id === 'fumon') return { ok:true, why: isFirstTime ? '初めての方も選べます' : 'どなたでも選べます' };
+  // 基本・挑戦：2回目以降ならどなたでも
   if (isFirstTime) return { ok:false, why:'2回目から選べます' };
   return { ok:true, why:'2回目以降ならどなたでも' };
 }
@@ -729,7 +731,7 @@ function histNote(){
   const s = readState();
   const t = $('histNote');
   if (s.isFirst){
-    t.innerHTML = '初めての方は<b>初回プラン</b>になります。参加費は3,300円で、<b>8人でゼロ、9人からプラス</b>になります。2回目からは、基本プラン・挑戦プランなどから選べます。';
+    t.innerHTML = '初めての方は、<b>初回プラン</b>か<b>集客不問プラン</b>を選べます。初回プランは参加費3,300円で、<b>8人でゼロ、9人からプラス</b>になります。2回目からは、基本プラン・挑戦プランなども選べます。';
     return;
   }
   const h = s.history;
